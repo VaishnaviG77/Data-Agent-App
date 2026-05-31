@@ -1,0 +1,231 @@
+
+// /* ===== SCREEN 2: MAPPING & CLEANING ===== */
+// function MappingCleaning(){
+//   const[src,setSrc]=useState("All");
+//   const[hitl,setHitl]=useState(false);
+//   const tabs=["All","Shopify","Amazon","Myntra"];
+//   const rows=[
+//     {s:"product_title",t:"product_name",st:"ok",ch:"Shopify"},
+//     {s:"variant_price",t:"price",st:"ok",ch:"Shopify"},
+//     {s:"sku_code",t:"sku",st:"ok",ch:"Amazon"},
+//     {s:"item_weight_gm",t:"weight_kg",st:"warning",ch:"Amazon"},
+//     {s:"mrp",t:"msrp",st:"ok",ch:"Myntra"},
+//     {s:"brand_name",t:"brand",st:"ok",ch:"Myntra"},
+//     {s:"fulfillment_type",t:"\u2014",st:"missing",ch:"Amazon"},
+//     {s:"color_family",t:"\u2014",st:"missing",ch:"Myntra"},
+//     {s:"inventory_qty",t:"stock_quantity",st:"ok",ch:"Shopify"},
+//     {s:"tax_class",t:"tax_category",st:"warning",ch:"Shopify"},
+//   ];
+//   const vis=src==="All"?rows:rows.filter(r=>r.ch===src);
+//   const issues=vis.filter(r=>r.st!=="ok").length;
+//   const stC={ok:T.grn,warning:T.amb,missing:T.red};
+//   const stI={ok:"\u2713",warning:"\u26A0",missing:"\u2715"};
+//   return(
+//     <div style={{display:"flex",gap:0,height:"100%",minHeight:0}}>
+//       <div style={{flex:1,display:"flex",flexDirection:"column",gap:20,minWidth:0}}>
+//         <header><h2 style={{fontSize:21,fontWeight:750,color:T.navy,margin:0}}>Column Mapping</h2><p style={{color:T.s500,fontSize:13,margin:"5px 0 0"}}>Map source columns to your unified schema. Resolve conflicts in the sidebar.</p></header>
+//         <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+//           {tabs.map(t=><button key={t} onClick={()=>setSrc(t)} style={{padding:"6px 15px",borderRadius:7,fontSize:12,fontWeight:650,cursor:"pointer",background:src===t?T.navy:T.s100,color:src===t?T.wh:T.s500,border:"none",transition:"all .15s"}}>{t}</button>)}
+//           <div style={{flex:1}}/>
+//           {issues>0&&<button onClick={()=>setHitl(true)} style={{padding:"6px 16px",borderRadius:7,fontSize:12,fontWeight:650,cursor:"pointer",background:T.ambP,color:T.amb,border:`1px solid ${T.ambB}`}}>{"\u26A0"} {issues} Unmatched {"\u2014"} Resolve</button>}
+//         </div>
+//         <div style={{background:T.wh,borderRadius:10,border:`1px solid ${T.s200}`,overflow:"hidden"}}>
+//           <div style={{display:"grid",gridTemplateColumns:"1.2fr 32px 1.2fr 90px 72px",padding:"11px 20px",background:T.s50,borderBottom:`1px solid ${T.s200}`,fontSize:10.5,fontWeight:700,color:T.s400,textTransform:"uppercase",letterSpacing:".06em"}}>
+//             <span>Source Column</span><span/><span>Target Field</span><span>Source</span><span style={{textAlign:"center"}}>Status</span>
+//           </div>
+//           {vis.map((r,i)=>{const[h,sH]=useState(false);return(
+//             <div key={i} onClick={()=>r.st!=="ok"&&setHitl(true)} onMouseEnter={()=>sH(true)} onMouseLeave={()=>sH(false)} style={{display:"grid",gridTemplateColumns:"1.2fr 32px 1.2fr 90px 72px",padding:"13px 20px",borderBottom:`1px solid ${T.s100}`,alignItems:"center",cursor:r.st!=="ok"?"pointer":"default",background:h&&r.st!=="ok"?T.ambP+"30":"transparent",transition:"background .1s"}}>
+//               <code style={{fontFamily:T.m,fontSize:12.5,color:T.navy,fontWeight:500}}>{r.s}</code>
+//               <span style={{textAlign:"center",color:T.s300,fontSize:15}}>{"\u2192"}</span>
+//               <code style={{fontFamily:T.m,fontSize:12.5,color:r.t==="\u2014"?T.s300:T.navy,fontWeight:500}}>{r.t}</code>
+//               <Pill>{r.ch}</Pill>
+//               <div style={{textAlign:"center"}}><span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:6,background:stC[r.st]+"14",color:stC[r.st],fontSize:13,fontWeight:700}}>{stI[r.st]}</span></div>
+//             </div>
+//           )})}
+//         </div>
+//       </div>
+//       <div style={{width:hitl?290:0,marginLeft:hitl?16:0,transition:"all .3s ease",overflow:"hidden",flexShrink:0}}>
+//         {hitl&&(
+//           <div style={{width:290,background:T.wh,borderRadius:10,border:`1px solid ${T.s200}`,padding:20,display:"flex",flexDirection:"column",gap:16,height:"100%",boxShadow:"-2px 0 16px rgba(0,0,0,.03)"}}>
+//             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+//               <h3 style={{margin:0,fontSize:14,fontWeight:750,color:T.navy}}>Resolve Conflicts</h3>
+//               <XBtn onClick={()=>setHitl(false)}/>
+//             </div>
+//             <p style={{fontSize:12,color:T.s500,margin:0,lineHeight:1.55}}>Drag unmatched source fields onto the correct target slot below.</p>
+//             <div>
+//               <div style={{fontSize:10.5,fontWeight:700,color:T.amb,textTransform:"uppercase",letterSpacing:".06em",marginBottom:8}}>Unmatched Fields</div>
+//               {vis.filter(r=>r.st!=="ok").map((r,i)=>(
+//                 <div key={i} draggable style={{padding:"10px 14px",background:T.ambP,borderRadius:8,marginBottom:6,fontSize:12,fontWeight:650,color:"#92400E",cursor:"grab",border:`1px dashed ${T.ambB}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+//                   <code style={{fontFamily:T.m,fontSize:11.5}}>{r.s}</code>
+//                   <span style={{fontSize:14,opacity:.5}}>{"\u2807"}</span>
+//                 </div>
+//               ))}
+//             </div>
+//             <div>
+//               <div style={{fontSize:10.5,fontWeight:700,color:T.s400,textTransform:"uppercase",letterSpacing:".06em",marginBottom:8}}>Available Targets</div>
+//               {["fulfillment_method","color","product_variant","custom_field_1"].map(t=>(
+//                 <div key={t} style={{padding:"10px 14px",background:T.s50,borderRadius:8,marginBottom:6,fontSize:12,color:T.s500,border:`1px dashed ${T.s200}`,fontFamily:T.m,fontWeight:500}}>{t}</div>
+//               ))}
+//             </div>
+//             <div style={{marginTop:"auto"}}><button style={{width:"100%",padding:"11px 0",background:T.blue,color:T.wh,border:"none",borderRadius:8,fontWeight:700,cursor:"pointer",fontSize:13}}>Apply Mappings</button></div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+ 
+// /* ===== SCREEN 3: STANDARDIZATION ===== */
+// function ProductStandardization(){
+//   const[rev,setRev]=useState(false);
+//   const[edit,setEdit]=useState(null);
+//   const data=[
+//     {o:"Nike Air Max 90 Mens Sneaker - White/Red",a:"Nike Air Max 90 \u2014 Men\u2019s Sneaker, White / Red",c:97,ch:"Shopify"},
+//     {o:"NIKE AIR MAX 90 M WHITE RED",a:"Nike Air Max 90 \u2014 Men\u2019s Sneaker, White / Red",c:94,ch:"Amazon"},
+//     {o:"adidas ultraboost 22 w running shoe blk",a:"Adidas Ultraboost 22 \u2014 Women\u2019s Running Shoe, Black",c:88,ch:"Myntra"},
+//     {o:"Samsung Galaxy S24 Ultra 256gb Titanium",a:"Samsung Galaxy S24 Ultra \u2014 256 GB, Titanium",c:96,ch:"Shopify"},
+//     {o:"Levi\u2019s 501 Original Fit Jean Mens 32x30",a:"Levi\u2019s 501 Original Fit \u2014 Men\u2019s Jeans, 32\u00d730",c:92,ch:"Amazon"},
+//     {o:"apple airpods pro gen2 usb-c",a:"Apple AirPods Pro (2nd Gen) \u2014 USB-C",c:90,ch:"Amazon"},
+//     {o:"Dyson v15 detect absolute cordless",a:"Dyson V15 Detect Absolute \u2014 Cordless Vacuum",c:84,ch:"Shopify"},
+//     {o:"Puma RS-X3 puzzle men trainers 10",a:"Puma RS-X3 Puzzle \u2014 Men\u2019s Trainer, US 10",c:63,ch:"Myntra"},
+//     {o:"ZARA BASIC OVERSIZED TEE WHT M",a:"Zara Basic Oversized T-Shirt \u2014 White, M",c:57,ch:"Amazon"},
+//     {o:"h&m slim fit chinos navy 32",a:"H&M Slim Fit Chinos \u2014 Navy, Size 32",c:72,ch:"Myntra"},
+//   ];
+//   const vis=rev?data.filter(d=>d.c<80):data;
+//   const hi=data.filter(d=>d.c>=90).length,med=data.filter(d=>d.c>=70&&d.c<90).length,lo=data.filter(d=>d.c<70).length;
+//   return(
+//     <div style={{display:"flex",flexDirection:"column",gap:22}}>
+//       <header><h2 style={{fontSize:21,fontWeight:750,color:T.navy,margin:0}}>Product Standardization Engine</h2><p style={{color:T.s500,fontSize:13,margin:"5px 0 0"}}>AI-powered normalization of product names across all channels.</p></header>
+//       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+//         {[{l:"Total Processed",v:data.length,cl:T.navy},{l:"High Confidence \u226590%",v:hi,cl:T.grn},{l:"Medium 70\u201389%",v:med,cl:T.amb},{l:"Needs Review <70%",v:lo,cl:T.red}].map(s=>(
+//           <div key={s.l} style={{background:T.wh,borderRadius:10,padding:"16px 20px",border:`1px solid ${T.s200}`,boxShadow:"0 1px 3px rgba(11,18,34,.06)"}}>
+//             <div style={{fontSize:10.5,color:T.s400,fontWeight:650,textTransform:"uppercase",letterSpacing:".04em",marginBottom:4}}>{s.l}</div>
+//             <div style={{fontSize:26,fontWeight:800,color:s.cl}}>{s.v}</div>
+//           </div>
+//         ))}
+//       </div>
+//       <div style={{display:"flex",gap:8}}>
+//         <button onClick={()=>setRev(false)} style={{padding:"6px 16px",borderRadius:7,fontSize:12,fontWeight:650,cursor:"pointer",background:!rev?T.navy:T.s100,color:!rev?T.wh:T.s500,border:"none"}}>All Products</button>
+//         <button onClick={()=>setRev(true)} style={{padding:"6px 16px",borderRadius:7,fontSize:12,fontWeight:650,cursor:"pointer",background:rev?T.red:T.s100,color:rev?T.wh:T.s500,border:"none"}}>{"\u2691"} Needs Review</button>
+//       </div>
+//       <div style={{background:T.wh,borderRadius:10,border:`1px solid ${T.s200}`,overflow:"hidden"}}>
+//         <div style={{display:"grid",gridTemplateColumns:"1.1fr 1.1fr 78px 150px 70px",padding:"11px 20px",background:T.s50,borderBottom:`1px solid ${T.s200}`,fontSize:10.5,fontWeight:700,color:T.s400,textTransform:"uppercase",letterSpacing:".06em"}}>
+//           <span>Original Product Name</span><span>Standardized AI Output</span><span>Source</span><span style={{textAlign:"center"}}>Confidence</span><span style={{textAlign:"center"}}>Action</span>
+//         </div>
+//         {vis.map((d,i)=>(
+//           <div key={i} style={{display:"grid",gridTemplateColumns:"1.1fr 1.1fr 78px 150px 70px",padding:"13px 20px",borderBottom:`1px solid ${T.s100}`,alignItems:"center",background:d.c<70?T.redP+"20":"transparent"}}>
+//             <span style={{fontSize:12.5,color:T.s500,lineHeight:1.45,paddingRight:12}}>{d.o}</span>
+//             <span style={{fontSize:12.5,color:T.navy,fontWeight:550,lineHeight:1.45,paddingRight:12}}>{d.a}</span>
+//             <Pill>{d.ch}</Pill>
+//             <div style={{padding:"0 8px"}}><ConfBar value={d.c}/></div>
+//             <div style={{textAlign:"center"}}>{d.c<80?<button onClick={()=>setEdit(i)} style={{padding:"4px 12px",background:"#FFF7ED",color:"#C2410C",border:"1px solid #FED7AA",borderRadius:6,fontSize:11,fontWeight:650,cursor:"pointer"}}>Edit</button>:<span style={{color:T.grn,fontSize:15}}>{"\u2713"}</span>}</div>
+//           </div>
+//         ))}
+//       </div>
+//       {edit!==null&&(
+//         <div style={{position:"fixed",inset:0,background:"rgba(11,18,34,.45)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={()=>setEdit(null)}>
+//           <div onClick={e=>e.stopPropagation()} style={{background:T.wh,borderRadius:16,padding:"28px 30px",width:480,boxShadow:"0 12px 40px rgba(11,18,34,.12)"}}>
+//             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+//               <h3 style={{margin:0,fontSize:16,fontWeight:750,color:T.navy}}>Manual Override</h3>
+//               <XBtn onClick={()=>setEdit(null)}/>
+//             </div>
+//             <label style={{display:"block",fontSize:12,fontWeight:650,color:T.s400,marginBottom:6}}>Original</label>
+//             <div style={{padding:"10px 14px",background:T.s50,borderRadius:8,fontSize:13,color:T.s500,marginBottom:16,border:`1px solid ${T.s200}`}}>{data[edit]?.o}</div>
+//             <label style={{display:"block",fontSize:12,fontWeight:650,color:T.s400,marginBottom:6}}>Standardized Name</label>
+//             <input defaultValue={data[edit]?.a} style={{width:"100%",padding:"10px 14px",border:`1px solid ${T.s200}`,borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:T.f}} onFocus={e=>e.target.style.borderColor=T.blue} onBlur={e=>e.target.style.borderColor=T.s200}/>
+//             <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:20}}>
+//               <button onClick={()=>setEdit(null)} style={{padding:"10px 22px",background:T.s100,color:T.s500,border:"none",borderRadius:8,fontWeight:650,cursor:"pointer",fontSize:13}}>Cancel</button>
+//               <button onClick={()=>setEdit(null)} style={{padding:"10px 26px",background:T.grn,color:T.wh,border:"none",borderRadius:8,fontWeight:650,cursor:"pointer",fontSize:13}}>Save Override</button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+ 
+// /* ===== SCREEN 4: ANALYTICS ===== */
+// function AnalyticsDashboard(){
+//   const init=[
+//     {id:1,title:"Total GMV",val:"$2.47M",delta:"+12.3%",up:true,type:"bar"},
+//     {id:2,title:"Channel Contribution",type:"donut"},
+//     {id:3,title:"Inventory Turnover",val:"4.8\u00d7",delta:"+0.6\u00d7",up:true,type:"line"},
+//     {id:4,title:"Avg Order Value",val:"$68.42",delta:"+3.1%",up:true,type:"spark"},
+//     {id:5,title:"Return Rate",val:"4.2%",delta:"\u22120.8%",up:true,type:"spark"},
+//     {id:6,title:"Top Products",type:"table"},
+//   ];
+//   const[w,setW]=useState(init);
+//   const[gal,setGal]=useState(false);
+//   const Bar=()=><svg width="100%" height="52" viewBox="0 0 200 52" style={{display:"block"}}>{[16,30,24,42,36,48,40,46,34,50,44,52].map((h,i)=><rect key={i} x={i*16+2} y={52-h} width="11" height={h} rx="2.5" fill={i>=10?T.blue:T.blueP}/>)}</svg>;
+//   const Donut=()=><svg width="88" height="88" viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="none" stroke={T.s100} strokeWidth="13"/><circle cx="50" cy="50" r="36" fill="none" stroke={T.blue} strokeWidth="13" strokeDasharray="136 227" strokeDashoffset="-55" strokeLinecap="round"/><circle cx="50" cy="50" r="36" fill="none" stroke={T.grn} strokeWidth="13" strokeDasharray="68 295" strokeDashoffset="-191" strokeLinecap="round"/><circle cx="50" cy="50" r="36" fill="none" stroke={T.amb} strokeWidth="13" strokeDasharray="23 340" strokeDashoffset="-259" strokeLinecap="round"/></svg>;
+//   const Line=()=><svg width="100%" height="52" viewBox="0 0 200 52" style={{display:"block"}}><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={T.blue} stopOpacity=".12"/><stop offset="100%" stopColor={T.blue} stopOpacity="0"/></linearGradient></defs><path d="M0,40 18,36 36,28 54,32 72,20 90,24 108,16 126,18 144,10 162,12 180,4 200,6 200,52 0,52Z" fill="url(#lg)"/><polyline points="0,40 18,36 36,28 54,32 72,20 90,24 108,16 126,18 144,10 162,12 180,4 200,6" fill="none" stroke={T.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+//   const Spark=()=><svg width="72" height="24" viewBox="0 0 72 24" style={{display:"block"}}><polyline points="0,18 9,14 18,16 27,8 36,12 45,6 54,10 63,3 72,5" fill="none" stroke={T.grn} strokeWidth="2" strokeLinecap="round"/></svg>;
+//   return(
+//     <div style={{display:"flex",flexDirection:"column",gap:22}}>
+//       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+//         <header><h2 style={{fontSize:21,fontWeight:750,color:T.navy,margin:0}}>Analytics Dashboard</h2><p style={{color:T.s500,fontSize:13,margin:"5px 0 0"}}>Executive overview of unified ecommerce performance.</p></header>
+//         <button onClick={()=>setGal(true)} style={{padding:"9px 20px",background:T.blue,color:T.wh,border:"none",borderRadius:8,fontSize:13,fontWeight:650,cursor:"pointer",display:"flex",alignItems:"center",gap:6,flexShrink:0}}><span style={{fontSize:16,lineHeight:1}}>+</span> Add Widget</button>
+//       </div>
+//       <div style={{display:"flex",gap:10,alignItems:"center",background:T.wh,padding:"10px 18px",borderRadius:10,border:`1px solid ${T.s200}`,flexWrap:"wrap"}}>
+//         <span style={{fontSize:10.5,fontWeight:700,color:T.s400,textTransform:"uppercase",letterSpacing:".06em"}}>Filters</span>
+//         <div style={{width:1,height:22,background:T.s200}}/>
+//         {[{l:"Date Range",v:"Last 30 Days"},{l:"Channel",v:"All Channels"},{l:"Category",v:"All Categories"}].map(f=>(
+//           <div key={f.l} style={{padding:"6px 14px",background:T.s50,borderRadius:7,border:`1px solid ${T.s200}`,fontSize:12,color:T.navy,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+//             <span style={{color:T.s400,fontSize:10}}>{f.l}:</span><span style={{fontWeight:650}}>{f.v}</span><span style={{color:T.s300,fontSize:9,marginLeft:2}}>{"\u25BE"}</span>
+//           </div>
+//         ))}
+//       </div>
+//       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+//         {w.map(x=>(
+//           <div key={x.id} style={{background:T.wh,borderRadius:10,padding:20,border:`1px solid ${T.s200}`,boxShadow:"0 1px 3px rgba(11,18,34,.06)",position:"relative",gridColumn:x.type==="table"?"span 2":"span 1"}}>
+//             <div style={{position:"absolute",top:12,right:12}}><XBtn onClick={()=>setW(ws=>ws.filter(y=>y.id!==x.id))} danger/></div>
+//             <div style={{fontSize:10.5,fontWeight:700,color:T.s400,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>{x.title}</div>
+//             {x.type==="donut"?(
+//               <div style={{display:"flex",alignItems:"center",gap:18}}>
+//                 <Donut/>
+//                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
+//                   {[{l:"Shopify",c:T.blue,p:"52%"},{l:"Amazon",c:T.grn,p:"33%"},{l:"Myntra",c:T.amb,p:"15%"}].map(z=>(
+//                     <div key={z.l} style={{display:"flex",alignItems:"center",gap:7,fontSize:12}}>
+//                       <div style={{width:8,height:8,borderRadius:2,background:z.c}}/><span style={{color:T.s500}}>{z.l}</span><span style={{fontWeight:750,color:T.navy}}>{z.p}</span>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+//             ):x.type==="table"?(
+//               <div>{[{n:"Nike Air Max 90",g:"$124K",u:"1,847"},{n:"Samsung Galaxy S24 Ultra",g:"$98K",u:"412"},{n:"Apple AirPods Pro",g:"$87K",u:"1,203"},{n:"Levi\u2019s 501 Original",g:"$62K",u:"934"}].map((r,i,a)=>(
+//                 <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:i<a.length-1?`1px solid ${T.s100}`:"none",fontSize:13}}>
+//                   <span style={{color:T.navy,fontWeight:550}}><span style={{color:T.s300,marginRight:8,fontSize:11,fontWeight:700,fontFamily:T.m}}>#{i+1}</span>{r.n}</span>
+//                   <div style={{display:"flex",gap:22,alignItems:"center"}}><span style={{color:T.s400,fontSize:12}}>{r.u} units</span><span style={{fontWeight:750,color:T.navy,fontFamily:T.m,fontSize:13}}>{r.g}</span></div>
+//                 </div>
+//               ))}</div>
+//             ):(
+//               <>
+//                 <div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:12}}>
+//                   <span style={{fontSize:28,fontWeight:800,color:T.navy}}>{x.val}</span>
+//                   {x.delta&&<span style={{fontSize:12,fontWeight:700,color:x.up?T.grn:T.red}}>{x.delta}</span>}
+//                   {x.type==="spark"&&<div style={{marginLeft:"auto"}}><Spark/></div>}
+//                 </div>
+//                 {x.type==="bar"&&<Bar/>}
+//                 {x.type==="line"&&<Line/>}
+//               </>
+//             )}
+//           </div>
+//         ))}
+//       </div>
+//       {gal&&(
+//         <div style={{position:"fixed",inset:0,background:"rgba(11,18,34,.45)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={()=>setGal(false)}>
+//           <div onClick={e=>e.stopPropagation()} style={{background:T.wh,borderRadius:16,padding:"28px 30px",width:440,boxShadow:"0 12px 40px rgba(11,18,34,.12)"}}>
+//             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+//               <h3 style={{margin:0,fontSize:16,fontWeight:750,color:T.navy}}>Widget Gallery</h3>
+//               <XBtn onClick={()=>setGal(false)}/>
+//             </div>
+//             <p style={{fontSize:12.5,color:T.s500,margin:"0 0 16px"}}>Select a KPI widget to add to your dashboard.</p>
+//             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+//               {["Conversion Rate","Customer LTV","SKU Velocity","Stockout Rate","Revenue by Region","Ad Spend ROAS"].map(n=>{const[h,sH]=useState(false);return<div key={n} onMouseEnter={()=>sH(true)} onMouseLeave={()=>sH(false)} style={{padding:"14px 16px",background:h?T.blueG:T.s50,borderRadius:10,border:`1px solid ${h?T.blue+"40":T.s200}`,cursor:"pointer",fontSize:13,fontWeight:650,color:h?T.blue:T.s500,transition:"all .15s",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:15}}>+</span>{n}</div>})}
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }

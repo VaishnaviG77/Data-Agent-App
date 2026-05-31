@@ -1,0 +1,519 @@
+// ── SCREEN 2: Mapping & Cleaning (shows real column schema from uploaded files) ──
+const MappingCleaning = ({ uploadedFiles }) => {
+  const [selectedFileId, setSelectedFileId] = useState(null);
+  const [fileDetails, setFileDetails]       = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Universal schema fields (the target we want to map to)
+  const universalSchema = [
+    "transaction_id", "transaction_date", "sku_id", "product_name",
+    "brand", "sku_category", "manufacturer_name", "region",
+    "channel_type", "units_sold", "mrp", "invoice_value_incl_gst",
+  ];
+
+  // Load file details when user picks a file
+  useEffect(() => {
+    if (!selectedFileId) {
+      setFileDetails(null);
+      return;
+    }
+    setLoadingDetails(true);
+    fetch(`${API_BASE}/files/${selectedFileId}`)
+      .then(r => r.json())
+      .then(data => {
+        setFileDetails(data);
+        setLoadingDetails(false);
+      })
+      .catch(() => setLoadingDetails(false));
+  }, [selectedFileId]);
+
+  const rawColumns = fileDetails?.col_names_list || [];
+
+  // Simple keyword-based auto-mapping for display
+  const autoMap = (rawCol) => {
+    const c = rawCol.toLowerCase().replace(/[^a-z0-9]/g, " ").trim();
+    if (c.includes("order id") || c.includes("orderid") || c.includes("transaction id")) return "transaction_id";
+    if (c.includes("date") || c.includes("created")) return "transaction_date";
+    if (c.includes("sku") || c.includes("product id") || c.includes("item id") || c.includes("article")) return "sku_id";
+    if (c.includes("product name") || c.includes("item name") || c.includes("title") || c.includes("description")) return "product_name";
+    if (c.includes("brand")) return "brand";
+    if (c.includes("category") || c.includes("dept")) return "sku_category";
+    if (c.includes("manufacturer") || c.includes("vendor") || c.includes("seller")) return "manufacturer_name";
+    if (c.includes("state") || c.includes("region") || c.includes("zone")) return "region";
+    if (c.includes("channel") || c.includes("platform")) return "channel_type";
+    if (c.includes("qty") || c.includes("quantity") || c.includes("units")) return "units_sold";
+    if (c.includes("mrp") || c.includes("market price") || c.includes("retail price")) return "mrp";
+    if (c.includes("invoice") || c.includes("amount") || c.includes("total") || c.includes("value") || c.includes("price")) return "invoice_value_incl_gst";
+    return null;
+  };
+
+  const mappings = rawColumns.map(col => ({ raw: col, target: autoMap(col) }));
+  const mappedCount   = mappings.filter(m => m.target).length;
+  const unmappedCount = mappings.filter(m => !m.target).length;
+
+  const colorMap = {
+    transaction_id: "#2563EB", transaction_date: "#7C3AED",
+    sku_id: "#DC2626", product_name: "#059669",
+    brand: "#D97706", sku_category: "#0891B2",
+    manufacturer_name: "#7C3AED", region: "#DB2777",
+    channel_type: "#EA580C", units_sold: "#16A34A",
+    mrp: "#9333EA", invoice_value_incl_gst: "#2563EB",
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 700, color: COLORS.text, margin: 0 }}>Mapping & Cleaning</h2>
+          <p style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textSecondary, margin: "6px 0 0" }}>
+            Select an uploaded file to see its raw columns and how they map to the universal schema.
+          </p>
+        </div>
+        {fileDetails && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <Badge color={COLORS.success} bg={COLORS.successLight}>{mappedCount} Auto-Mapped</Badge>
+            {unmappedCount > 0 && <Badge color={COLORS.amber} bg={COLORS.amberLight}>{unmappedCount} Unmatched</Badge>}
+          </div>
+        )}
+      </div>
+
+      {/* Platform-grouped file selector */}
+      <div style={{ background: COLORS.surface, borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: "16px 18px" }}>
+        <label style={{ fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 12 }}>
+          Select a file to inspect
+        </label>
+        {uploadedFiles.length === 0 ? (
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textMuted, padding: "8px 0" }}>
+            No files uploaded yet. Go to Ingestion tab to upload files first.
+          </div>
+        ) : (() => {
+          // Detect platform from filename (mirrors DataIngestionHub logic)
+          const detectPlatform = (filename) => {
+            const n = (filename || "").toLowerCase();
+            if (n.includes("shopify"))    return "Shopify";
+            if (n.includes("amazon"))     return "Amazon";
+            if (n.includes("myntra"))     return "Myntra";
+            if (n.includes("woocommerce") || n.includes("woo")) return "WooCommerce";
+            if (n.includes("bigcommerce") || n.includes("big")) return "BigCommerce";
+            if (n.includes("flipkart"))   return "Flipkart";
+            if (n.includes("meesho"))     return "Meesho";
+            return "Manual / CSV";
+          };
+          const platformConfig = {
+            "Shopify":     { color: "#1DB954", bg: "#D1FAE5", icon: "🛍️" },
+            "Amazon":      { color: "#FF9900", bg: "#FEF3C7", icon: "📦" },
+            "Myntra":      { color: "#E91E8C", bg: "#FCE7F3", icon: "👗" },
+            "WooCommerce": { color: "#7F54B3", bg: "#EDE9FE", icon: "🛒" },
+            "BigCommerce": { color: "#34495E", bg: "#F1F5F9", icon: "🏪" },
+            "Flipkart":    { color: "#2874F0", bg: "#DBEAFE", icon: "🔷" },
+            "Meesho":      { color: "#F43F5E", bg: "#FEE2E2", icon: "🏷️" },
+            "Manual / CSV":{ color: "#64748B", bg: "#F1F5F9", icon: "📄" },
+          };
+          // Group files by platform
+          const grouped = uploadedFiles.reduce((acc, f) => {
+            const key = detectPlatform(f.filename);
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(f);
+            return acc;
+          }, {});
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {Object.entries(grouped).map(([platform, files]) => {
+                const cfg = platformConfig[platform] || { color: COLORS.primary, bg: COLORS.primaryLight, icon: "📁" };
+                const isPlatformSelected = files.some(f => f.id === selectedFileId);
+                return (
+                  <div key={platform} style={{
+                    borderRadius: 12, border: `1px solid ${isPlatformSelected ? cfg.color + "60" : COLORS.border}`,
+                    overflow: "hidden",
+                    boxShadow: isPlatformSelected ? `0 0 0 2px ${cfg.color}20` : "none",
+                    transition: "all 0.15s",
+                  }}>
+                    {/* Platform header */}
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "10px 14px", background: cfg.bg,
+                      borderBottom: `1px solid ${cfg.color}20`,
+                    }}>
+                      <span style={{ fontSize: 16 }}>{cfg.icon}</span>
+                      <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: cfg.color }}>{platform}</span>
+                      <span style={{
+                        marginLeft: "auto", padding: "1px 7px", borderRadius: 10,
+                        background: `${cfg.color}20`, fontFamily: FONTS.mono,
+                        fontSize: 10, fontWeight: 700, color: cfg.color,
+                      }}>{files.length}</span>
+                    </div>
+                    {/* Files in this platform */}
+                    <div style={{ background: COLORS.surface }}>
+                      {files.map(f => {
+                        const { bg: ftBg, color: ftColor } = getFileTypeColor(f.file_type);
+                        const isSelected = selectedFileId === f.id;
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => setSelectedFileId(isSelected ? null : f.id)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 8, width: "100%",
+                              padding: "9px 14px", cursor: "pointer", textAlign: "left",
+                              border: "none", borderBottom: `1px solid ${COLORS.borderLight}`,
+                              background: isSelected ? `${cfg.color}12` : "transparent",
+                              transition: "background 0.12s",
+                            }}
+                            onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = COLORS.surfaceAlt; }}
+                            onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <span style={{
+                              padding: "1px 5px", borderRadius: 4,
+                              background: isSelected ? `${cfg.color}25` : ftBg,
+                              fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
+                              color: isSelected ? cfg.color : ftColor, flexShrink: 0,
+                            }}>{f.file_type?.toUpperCase()}</span>
+                            <span style={{
+                              fontFamily: FONTS.body, fontSize: 11, fontWeight: isSelected ? 600 : 400,
+                              color: isSelected ? cfg.color : COLORS.text,
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+                            }} title={f.filename}>{f.filename}</span>
+                            <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: COLORS.textMuted, flexShrink: 0 }}>
+                              {(f.row_count || 0).toLocaleString()}r
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Mapping view */}
+      {loadingDetails && (
+        <div style={{ padding: 32, textAlign: "center", color: COLORS.textMuted, fontFamily: FONTS.body }}>Loading schema...</div>
+      )}
+
+      {fileDetails && !loadingDetails && (
+        <div style={{ display: "flex", gap: 16, minHeight: 420 }}>
+          {/* Left: Raw Source columns */}
+          <div style={{ flex: 1, background: COLORS.surface, borderRadius: 14, border: `1px solid ${COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "14px 18px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: COLORS.text }}>Raw Source Data</span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: COLORS.textMuted }}>{fileDetails.filename}</span>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 4 }}>
+              {mappings.map((m, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                  borderBottom: `1px solid ${COLORS.borderLight}`,
+                  background: !m.target ? `${COLORS.warningLight}44` : "transparent",
+                }}>
+                  <Icons.Grip />
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 600, color: COLORS.text }}>{m.raw}</span>
+                  </div>
+                  {m.target ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 6,
+                        background: `${colorMap[m.target] || COLORS.primary}15`,
+                        border: `1px solid ${colorMap[m.target] || COLORS.primary}40`,
+                        fontFamily: FONTS.mono, fontSize: 11, fontWeight: 600,
+                        color: colorMap[m.target] || COLORS.primary,
+                      }}>{m.target}</span>
+                      <Icons.ArrowRight />
+                    </div>
+                  ) : (
+                    <Badge color={COLORS.amber} bg={COLORS.amberLight}>
+                      <Icons.Alert /> Unmatched
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Center connector lines */}
+          <div style={{ width: 48, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="48" height="320" viewBox="0 0 48 320">
+              {mappings.filter(m => m.target).slice(0, 6).map((m, i) => {
+                const col = colorMap[m.target] || COLORS.primary;
+                const y1  = 30 + i * 44;
+                const y2  = 30 + universalSchema.indexOf(m.target) * 32;
+                return (
+                  <g key={i}>
+                    <line x1="0" y1={y1} x2="48" y2={Math.min(y2, 310)} stroke={col} strokeWidth="1.5" opacity="0.5" />
+                    <circle cx="2" cy={y1} r="3" fill={col} />
+                    <circle cx="46" cy={Math.min(y2, 310)} r="3" fill={col} />
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Right: Universal Schema */}
+          <div style={{ flex: 1, background: COLORS.surface, borderRadius: 14, border: `1px solid ${COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "14px 18px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: COLORS.text }}>Universal Schema</span>
+              <Badge color={COLORS.primary} bg={COLORS.primaryLight}>Target</Badge>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 4 }}>
+              {universalSchema.map((f) => {
+                const isMapped = mappings.some(m => m.target === f);
+                return (
+                  <div key={f} style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                    borderBottom: `1px solid ${COLORS.borderLight}`,
+                  }}>
+                    <span style={{ width: 4, height: 28, borderRadius: 2, background: isMapped ? (colorMap[f] || COLORS.primary) : COLORS.border }} />
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 600, color: COLORS.text, flex: 1 }}>{f}</span>
+                    {isMapped ? (
+                      <span style={{ color: COLORS.success }}><Icons.Check /></span>
+                    ) : (
+                      <span style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>—</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* HITL sidebar for unmatched */}
+          {unmappedCount > 0 && (
+            <div style={{
+              width: 220, background: COLORS.surface, borderRadius: 14,
+              border: `1px solid ${COLORS.warning}60`, overflow: "hidden",
+              display: "flex", flexDirection: "column",
+              boxShadow: `0 0 0 1px ${COLORS.warning}20, 0 4px 12px rgba(217,119,6,0.08)`,
+            }}>
+              <div style={{ padding: "12px 16px", background: `${COLORS.warningLight}80`, borderBottom: `1px solid ${COLORS.warning}30`, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icons.Alert />
+                <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: COLORS.amber }}>Human Review</span>
+              </div>
+              <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+                  These columns could not be auto-matched. Review and map them manually.
+                </div>
+                {mappings.filter(m => !m.target).map(m => (
+                  <div key={m.raw} style={{
+                    padding: "8px 10px", borderRadius: 8,
+                    border: `1px dashed ${COLORS.warning}80`, background: `${COLORS.warningLight}40`,
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    <Icons.Grip />
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 11, fontWeight: 600, color: COLORS.text }}>{m.raw}</span>
+                  </div>
+                ))}
+                <div style={{ marginTop: "auto", padding: "10px 0 0", borderTop: `1px solid ${COLORS.border}` }}>
+                  <button style={{
+                    width: "100%", padding: "8px", borderRadius: 8, border: "none",
+                    background: COLORS.primary, color: "white", fontFamily: FONTS.body,
+                    fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  }}>Confirm Mappings</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty state: no file selected */}
+      {!fileDetails && !loadingDetails && uploadedFiles.length > 0 && (
+        <div style={{
+          padding: "48px 24px", textAlign: "center",
+          background: COLORS.surface, borderRadius: 14, border: `1px dashed ${COLORS.border}`,
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🗺️</div>
+          <div style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 600, color: COLORS.text }}>Select a file above to see its schema</div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textMuted, marginTop: 4 }}>
+            The raw column names will be auto-mapped to the universal schema
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── SCREEN 3: Product Standardization (unchanged from wireframe) ───────────────
+const ProductStandardization = () => {
+  const [filter, setFilter] = useState("all");
+
+  const products = [
+    { original: "Nike Air Max 90 Black/White Mens Running Shoe Sz 10", standardized: "Nike Air Max 90 — Black/White — Men's — US 10", confidence: 96, status: "approved" },
+    { original: "adidas ultraboost 22 w cloud wht", standardized: "Adidas Ultraboost 22 — Cloud White — Women's", confidence: 92, status: "approved" },
+    { original: "PUMA RS-X³ puzzle sneakers yellow", standardized: "Puma RS-X³ Puzzle — Spectra Yellow — Unisex", confidence: 88, status: "approved" },
+    { original: "nb 574 grey D width classic", standardized: "New Balance 574 Classic — Grey — Width D — Unisex", confidence: 78, status: "review" },
+    { original: "reebok classic lthr wht/gum", standardized: "Reebok Classic Leather — White/Gum — Unisex", confidence: 85, status: "approved" },
+    { original: "crocs classic clog army grn M7/W9", standardized: "Crocs Classic Clog — Army Green — M7/W9", confidence: 62, status: "review" },
+    { original: "allbirds wool runner nat blk", standardized: "Allbirds Wool Runner — Natural Black", confidence: 55, status: "review" },
+    { original: "skechers gowalk 6 mesh slip on", standardized: "Skechers GOwalk 6 — Mesh Slip-On", confidence: 71, status: "review" },
+  ];
+
+  const filtered = filter === "all" ? products : products.filter(p => p.status === "review");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 700, color: COLORS.text, margin: 0 }}>Product Standardization</h2>
+          <p style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textSecondary, margin: "6px 0 0" }}>AI has normalized product names with confidence scoring.</p>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button onClick={() => setFilter("all")} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${filter === "all" ? COLORS.primary : COLORS.border}`, background: filter === "all" ? COLORS.primaryLight : COLORS.surface, color: filter === "all" ? COLORS.primary : COLORS.textSecondary, fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>All ({products.length})</button>
+          <button onClick={() => setFilter("review")} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${filter === "review" ? COLORS.warning : COLORS.border}`, background: filter === "review" ? COLORS.warningLight : COLORS.surface, color: filter === "review" ? COLORS.amber : COLORS.textSecondary, fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icons.Filter /> Needs Review ({products.filter(p => p.status === "review").length})</button>
+        </div>
+      </div>
+      <div style={{ background: COLORS.surface, borderRadius: 14, border: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px 90px", padding: "12px 20px", background: COLORS.surfaceAlt, borderBottom: `1px solid ${COLORS.border}` }}>
+          {["Original Product Name", "Standardized AI Output", "Confidence", "Action"].map(h => (
+            <span key={h} style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</span>
+          ))}
+        </div>
+        {filtered.map((p, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px 90px", padding: "14px 20px", borderBottom: `1px solid ${COLORS.borderLight}`, alignItems: "center", background: p.status === "review" ? `${COLORS.warningLight}22` : "transparent" }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.4, paddingRight: 12 }}>{p.original}</div>
+            <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 500, color: COLORS.text, paddingRight: 12 }}>{p.standardized}</div>
+            <ConfidenceBar value={p.confidence} />
+            <div>
+              {p.status === "approved" ? (
+                <Badge color={COLORS.success} bg={COLORS.successLight}><Icons.Check /> Approved</Badge>
+              ) : (
+                <button style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${COLORS.warning}`, background: "transparent", color: COLORS.amber, fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Override</button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        {[
+          { label: "Total Processed", value: "270,533", sub: "products" },
+          { label: "Auto-Approved", value: "89.2%", sub: ">85% confidence" },
+          { label: "Needs Review", value: "4,821", sub: "flagged items" },
+          { label: "Avg Confidence", value: "91.4%", sub: "+2.1% from last run" },
+        ].map(s => (
+          <div key={s.label} style={{ background: COLORS.surface, borderRadius: 12, padding: "16px 18px", border: `1px solid ${COLORS.border}` }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
+            <div style={{ fontFamily: FONTS.display, fontSize: 24, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{s.value}</div>
+            <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── SCREEN 4: Analytics Dashboard (unchanged from wireframe) ───────────────────
+const AnalyticsDashboard = () => {
+  const [widgets, setWidgets] = useState([
+    { id: 1, title: "Total GMV", value: "$12.4M", change: "+14.2%", positive: true, type: "metric" },
+    { id: 2, title: "Channel Contribution", type: "chart-donut" },
+    { id: 3, title: "Inventory Turnover", value: "8.2x", change: "+0.6x", positive: true, type: "metric" },
+    { id: 4, title: "Revenue by Channel", type: "chart-bar" },
+    { id: 5, title: "Active SKUs", value: "34,891", change: "+1,204", positive: true, type: "metric" },
+    { id: 6, title: "Conversion Rate", value: "3.42%", change: "-0.18%", positive: false, type: "metric" },
+  ]);
+  const [showGallery, setShowGallery] = useState(false);
+  const removeWidget = (id) => setWidgets(w => w.filter(x => x.id !== id));
+
+  const MiniDonut = () => (
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="45" fill="none" stroke={COLORS.surfaceAlt} strokeWidth="18" />
+      <circle cx="60" cy="60" r="45" fill="none" stroke={COLORS.primary} strokeWidth="18" strokeDasharray="113 170" strokeDashoffset="-10" strokeLinecap="round" />
+      <circle cx="60" cy="60" r="45" fill="none" stroke="#7C3AED" strokeWidth="18" strokeDasharray="62 221" strokeDashoffset="-123" strokeLinecap="round" />
+      <circle cx="60" cy="60" r="45" fill="none" stroke="#F59E0B" strokeWidth="18" strokeDasharray="45 238" strokeDashoffset="-185" strokeLinecap="round" />
+      <text x="60" y="56" textAnchor="middle" fontFamily={FONTS.display} fontSize="16" fontWeight="700" fill={COLORS.text}>$12.4M</text>
+      <text x="60" y="72" textAnchor="middle" fontFamily={FONTS.body} fontSize="10" fill={COLORS.textMuted}>Total GMV</text>
+    </svg>
+  );
+
+  const MiniBar = () => (
+    <svg width="100%" height="100" viewBox="0 0 280 100">
+      {[{ x: 10, h: 60, color: COLORS.primary }, { x: 58, h: 82, color: "#7C3AED" }, { x: 106, h: 45, color: "#F59E0B" }, { x: 154, h: 30, color: "#059669" }, { x: 202, h: 68, color: "#DC2626" }].map((b, i) => (
+        <g key={i}>
+          <rect x={b.x} y={95 - b.h} width="32" height={b.h} rx="4" fill={b.color} opacity="0.85" />
+          <text x={b.x + 16} y={95 - b.h - 4} textAnchor="middle" fontFamily={FONTS.mono} fontSize="9" fill={COLORS.textMuted}>{["$3.8M", "$5.1M", "$1.9M", "$0.8M", "$4.2M"][i]}</text>
+        </g>
+      ))}
+    </svg>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 700, color: COLORS.text, margin: 0 }}>Analytics Dashboard</h2>
+          <p style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textSecondary, margin: "6px 0 0" }}>Customizable executive view of your ecommerce KPIs.</p>
+        </div>
+        <button onClick={() => setShowGallery(!showGallery)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: COLORS.primary, color: "white", border: "none", borderRadius: 10, fontFamily: FONTS.body, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <Icons.Plus /> Add Widget
+        </button>
+      </div>
+      <div style={{ display: "flex", gap: 12, padding: "12px 18px", background: COLORS.surface, borderRadius: 12, border: `1px solid ${COLORS.border}`, alignItems: "center" }}>
+        <span style={{ fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, color: COLORS.textMuted, marginRight: 4 }}>Filters</span>
+        {[{ icon: <Icons.Calendar />, label: "Jan 1 – Mar 24, 2026" }, { icon: null, label: "All Channels" }, { icon: null, label: "All Categories" }].map((f, i) => (
+          <button key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: `1px solid ${COLORS.border}`, background: COLORS.surfaceAlt, fontFamily: FONTS.body, fontSize: 12, color: COLORS.textSecondary, cursor: "pointer" }}>
+            {f.icon} {f.label} <Icons.Chevron />
+          </button>
+        ))}
+      </div>
+      {showGallery && (
+        <div style={{ background: COLORS.surface, borderRadius: 12, border: `1px solid ${COLORS.primary}40`, padding: 16 }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
+            <span>Widget Gallery</span>
+            <button onClick={() => setShowGallery(false)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted }}><Icons.X /></button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            {["AOV Trend", "Return Rate", "Top Products", "Fulfillment SLA", "Customer LTV", "Cart Abandonment", "Channel Mix", "Category P&L"].map(w => (
+              <button key={w} style={{ padding: "10px 12px", borderRadius: 8, border: `1px dashed ${COLORS.border}`, background: COLORS.surfaceAlt, fontFamily: FONTS.body, fontSize: 12, fontWeight: 500, color: COLORS.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                <Icons.Plus /> {w}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        {widgets.map((w) => (
+          <div key={w.id} style={{ background: COLORS.surface, borderRadius: 14, border: `1px solid ${COLORS.border}`, overflow: "hidden", gridColumn: w.type === "chart-bar" ? "span 2" : "span 1" }}>
+            <div style={{ padding: "12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${COLORS.borderLight}` }}>
+              <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: COLORS.text }}>{w.title}</span>
+              <button onClick={() => removeWidget(w.id)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 4 }}><Icons.X /></button>
+            </div>
+            <div style={{ padding: 18 }}>
+              {w.type === "metric" && (
+                <div>
+                  <div style={{ fontFamily: FONTS.display, fontSize: 32, fontWeight: 700, color: COLORS.text }}>{w.value}</div>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 600, color: w.positive ? COLORS.success : COLORS.error }}>{w.change}</span>
+                  <span style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted, marginLeft: 6 }}>vs prior period</span>
+                  <svg width="100%" height="40" viewBox="0 0 200 40" style={{ marginTop: 10 }}>
+                    <defs>
+                      <linearGradient id={`grad-${w.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={w.positive ? COLORS.success : COLORS.error} stopOpacity="0.15" />
+                        <stop offset="100%" stopColor={w.positive ? COLORS.success : COLORS.error} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={w.positive ? "M0,35 Q30,30 60,28 T120,20 T180,12 T200,8" : "M0,10 Q30,12 60,15 T120,22 T180,30 T200,35"} fill="none" stroke={w.positive ? COLORS.success : COLORS.error} strokeWidth="2" />
+                    <path d={w.positive ? "M0,35 Q30,30 60,28 T120,20 T180,12 T200,8 V40 H0 Z" : "M0,10 Q30,12 60,15 T120,22 T180,30 T200,35 V40 H0 Z"} fill={`url(#grad-${w.id})`} />
+                  </svg>
+                </div>
+              )}
+              {w.type === "chart-donut" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                  <MiniDonut />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {[{ color: COLORS.primary, label: "Shopify", pct: "40%" }, { color: "#7C3AED", label: "Amazon", pct: "22%" }, { color: "#F59E0B", label: "Myntra", pct: "16%" }, { color: COLORS.surfaceAlt, label: "Others", pct: "22%" }].map(d => (
+                      <div key={d.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 3, background: d.color }} />
+                        <span style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textSecondary, minWidth: 56 }}>{d.label}</span>
+                        <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 600, color: COLORS.text }}>{d.pct}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {w.type === "chart-bar" && <MiniBar />}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
