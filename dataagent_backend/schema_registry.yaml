@@ -1,0 +1,231 @@
+manual_overrides:
+
+  TataCliq:
+    transaction_id: "Sub Order ID"
+    transaction_date: "Order Date"
+    sku_id: null
+    product_name: null
+    brand: null
+    sku_category: "Distribution Type"
+    manufacturer_name: null
+    city: null
+    region: "Bill State"
+    channel_type: "Distribution Type"
+    units_sold: null
+    mrp: "Order Amount"
+    invoice_value_incl_gst: "Order Amount"
+    _defaults:
+      product_name: "Unknown"
+      units_sold: 1
+
+  Myntra:
+    transaction_id: "order release id"
+    transaction_date: "created on"
+    sku_id: "sku id"
+    product_name: "style name"
+    brand: "brand"
+    sku_category: "article type"
+    manufacturer_name: null
+    city: null
+    region: "state"
+    channel_type: "Online"
+    units_sold: null
+    mrp: "total mrp"
+    invoice_value_incl_gst: "final amount"
+    _defaults:
+      channel_type: "Marketplace"
+      units_sold: 1
+
+  Ajio:
+    transaction_id: "Cust Order No"
+    transaction_date: "Cust Order Date"
+    sku_id: "Seller SKU"
+    product_name: "Description"
+    brand: "Brand"
+    sku_category: null
+    manufacturer_name: "Seller Name"
+    city: null
+    region: null
+    channel_type: "Fulfillment Type"
+    units_sold: "Order Qty"
+    mrp: "Listing MRP"
+    invoice_value_incl_gst: "Invoice Value"
+    _defaults:
+      sku_category: "Unknown"
+      region: "Unknown"
+
+  Nykaa:
+    transaction_id: "OrderNo"
+    transaction_date: "OrderDate"
+    sku_id: "SKUCode"
+    product_name: "SKUName"
+    brand: "Brand"
+    sku_category: "Category"
+    manufacturer_name: "VendorName"
+    city: null
+    region: "State"
+    channel_type: "OrderSource"
+    units_sold: "OrderQty"
+    mrp: "MRP"
+    invoice_value_incl_gst: "LineItemTotal"
+    _defaults:
+      channel_type: "Online"
+
+  Pernia:
+    transaction_id: "PO Number"
+    transaction_date: "PO Date"
+    sku_id: "SKU Code"
+    product_name: "SKU Code"
+    brand: "Designer Name"
+    sku_category: null
+    manufacturer_name: null
+    city: null
+    region: null
+    channel_type: null
+    units_sold: null
+    mrp: "MRP"
+    invoice_value_incl_gst: "PO Value"
+    _defaults:
+      sku_category: "Unknown"
+      region: "Unknown"
+      channel_type: "Marketplace"
+      units_sold: 1
+
+  Zepto:
+    transaction_id: null
+    transaction_date: "Date"
+    sku_id: "SKU Number"
+    product_name: "SKU Name"
+    brand: "Brand Name"
+    sku_category: "SKU Category"
+    manufacturer_name: "Manufacturer Name"
+    city: "City"
+    region: null
+    channel_type: "Online"
+    units_sold: "Sales (Qty) - Units"
+    mrp: "MRP"
+    invoice_value_incl_gst: "Gross Merchandise Value"
+    _defaults:
+      transaction_id: "Unknown"
+      channel_type: "Online"
+
+  Amazon:
+    transaction_id: null
+    transaction_date: "date"
+    sku_id: "ASIN"
+    product_name: "Product Title"
+    brand: "Brand"
+    sku_category: null
+    manufacturer_name: null
+    city: null
+    region: null
+    channel_type: null
+    units_sold: "Ordered Units"
+    units_returned: "Customer Returns"
+    mrp: null
+    invoice_value_incl_gst: "Ordered Revenue"
+    _defaults:
+      transaction_id: "Unknown"
+      channel_type: "Online"
+
+  Blinkit:
+    transaction_id: null
+    transaction_date: "date"
+    sku_id: "item_id"
+    product_name: "item_name"
+    brand: null
+    sku_category: "category"
+    manufacturer_name: "manufacturer_name"
+    city: "city_name"
+    region: null
+    channel_type: null
+    units_sold: "qty_sold"
+    mrp: "mrp"
+    invoice_value_incl_gst: "mrp"
+    _defaults:
+      transaction_id: "Unknown"
+      brand: "Unknown"
+      region: "Unknown"
+      channel_type: "Online"
+
+  Instamart:
+    transaction_id: null
+    transaction_date: "ORDERED_DATE"
+    sku_id: "ITEM_CODE"
+    product_name: "PRODUCT_NAME"
+    brand: "BRAND"
+    sku_category: "L1_CATEGORY"
+    manufacturer_name: null
+    city: "CITY"
+    region: null
+    channel_type: null
+    units_sold: "UNITS_SOLD"
+    mrp: "BASE_MRP"
+    invoice_value_incl_gst: "GMV"
+    _defaults:
+      transaction_id: "Unknown"
+      manufacturer_name: "Unknown"
+      region: "Unknown"
+      channel_type: "Online"
+
+  BigBasket:
+    transaction_id: null
+    transaction_date: "date_range"
+    sku_id: "source_sku_id"
+    product_name: "sku_description"
+    brand: "brand_name"
+    sku_category: "top_slug"
+    manufacturer_name: null
+    city: "source_city_name"
+    region: null
+    channel_type: null
+    units_sold: "total_quantity"
+    mrp: "total_mrp"
+    invoice_value_incl_gst: "total_sales"
+    _defaults:
+      transaction_id: "Unknown"
+      manufacturer_name: "Unknown"
+      region: "Unknown"
+      channel_type: "Online"
+
+  FlipkartMinutes:
+    transaction_id: null
+    transaction_date: null
+    sku_id: "product_id"
+    product_name: "product_title"
+    brand: "brand"
+    sku_category: "analytic_vertical"
+    manufacturer_name: "Company"
+    city: "City"
+    region: null
+    channel_type: "marketplace_id"
+    units_sold: "units"
+    mrp: "mrp"
+    invoice_value_incl_gst: "mrp"
+    _defaults:
+      transaction_id: "Unknown"
+      transaction_date: "Unknown"
+      region: "Unknown"
+ 
+  FlipkartGrocery:
+    transaction_id: null
+    transaction_date: null
+    sku_id: "FSN"
+    product_name: "Title"
+    brand: "Brand"
+    sku_category: "L3"
+    manufacturer_name: "Company1"
+    city: "Location"
+    region: null
+    channel_type: null
+    units_sold: "Units"
+    mrp: null
+    invoice_value_incl_gst: "GMV"
+    _defaults:
+      transaction_id: "Unknown"
+      transaction_date: "Unknown"
+      region: "Unknown"
+      channel_type: "Online"
+# Auto-detected mappings for unknown platforms are saved below.
+# Review and move to manual_overrides above if they look correct.
+platforms: {}
